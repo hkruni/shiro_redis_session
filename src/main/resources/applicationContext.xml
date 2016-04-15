@@ -1,0 +1,157 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:tx="http://www.springframework.org/schema/tx" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"  
+	xmlns:cache="http://www.springframework.org/schema/cache"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-3.2.xsd 
+	http://www.springframework.org/schema/tx 
+	http://www.springframework.org/schema/tx/spring-tx-3.2.xsd 
+	http://www.springframework.org/schema/jee 
+	http://www.springframework.org/schema/jee/spring-jee-3.2.xsd 
+	http://www.springframework.org/schema/context 
+	http://www.springframework.org/schema/context/spring-context-3.2.xsd 
+	http://www.springframework.org/schema/aop 
+	http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+    http://www.springframework.org/schema/cache 
+	http://www.springframework.org/schema/cache/spring-cache-3.2.xsd
+	http://www.springframework.org/schema/mvc   
+    http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
+	
+	<!--加载properties文件-->
+ 	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath*:jdbc.properties</value>
+			</list>
+		</property>
+	</bean>
+	
+	<mvc:annotation-driven/> 
+
+  	<!-- SpringMVC上传文件时，需要配置MultipartResolver处理器 -->  
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">  
+        <property name="defaultEncoding" value="UTF-8"/>  
+        <!-- 指定所上传文件的总大小不能超过200KB。注意maxUploadSize属性的限制不是针对单个文件，而是所有文件的容量之和 -->  
+        <property name="maxUploadSize" value="200000"/>  
+    </bean> 
+    
+    <!--哪些包可以使用注解文件-->
+    <context:component-scan base-package="com.cmdi.yjs">
+    	<context:exclude-filter type="regex" expression="com.cmdi.yjs.filter.*Filter"/>
+    </context:component-scan>  
+	
+	
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName">
+			<value>com.mysql.jdbc.Driver</value>
+		</property>
+		<property name="url">
+			<value>${jdbcUrl}</value>
+		</property>
+		<property name="username">
+			<value>${username}</value>
+		</property>
+		<property name="password">
+			<value>${password}</value>
+		</property>
+	</bean>
+	
+	<context:annotation-config/> 
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="mapperLocations" value="classpath*:com/cmdi/yjs/dao/*.xml" />
+	</bean>
+	
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.cmdi.yjs.dao" />
+	</bean>
+	
+	
+	<!--配置拦截器, 多个拦截器,顺序执行 -->  
+	<mvc:interceptors>    
+	    <mvc:interceptor>    
+	<!-- 匹配的是url路径， 如果不配置或/**,将拦截所有的Controller -->  
+	        <mvc:mapping path="/**" />  
+	        <bean class="com.cmdi.yjs.interceptor.CommonInterceptor"></bean>    
+	 </mvc:interceptor>  
+    <!-- 当设置多个拦截器时，先按顺序调用preHandle方法，然后逆序调用每个拦截器的postHandle和afterCompletion方法 -->  
+	</mvc:interceptors> 
+
+	
+	
+	<!-- 安全认证过滤器 -->  
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">  
+        <property name="securityManager" ref="securityManager" />  
+        <property name="loginUrl" value="/login.jsp" />  
+		<property name="successUrl" value="/index.jsp"/> 
+   		<property name="unauthorizedUrl" value="/fail.jsp"/>
+        <property name="filterChainDefinitions">  
+            <value>  
+				/login = anon
+				/fail* = anon
+                /** = authc
+            </value>  
+        </property>  
+    </bean>  
+  
+    <!-- 定义 Shiro 主要业务对象 -->  
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">  
+        <property name="realm" ref="systemAuthorizingRealm" />  
+		<property name="sessionMode" value="http"></property>    
+        <property name="sessionManager" ref="sessionManager"></property>
+    </bean>  
+	
+	<!-- 会话管理器 ，用于Web环境的实现，可以替代ServletContainerSessionManager，自己维护着会话，直接
+	 废弃了Servlet容器的会话管理-->
+    <bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+    	<!-- 设置全局会话超时时间，默认30分钟(1800000) --> 
+        <property name="globalSessionTimeout" value="1800000"/>
+		 <!-- 是否在会话过期后会调用SessionDAO的delete方法删除会话 默认true -->
+        <property name="deleteInvalidSessions" value="true"/>
+		 <!-- 定时检查失效的session -->
+        <property name="sessionValidationSchedulerEnabled" value="true"/>
+		<!-- 会话验证器调度时间 --> 
+        <property name="sessionValidationInterval" value="1800000"/>
+		<!-- session存储的实现 -->
+        <property name="sessionDAO" ref="redisSession"/>
+        <property name="sessionIdCookieEnabled" value="true"/>
+		 <!-- sessionIdCookie的实现,用于重写覆盖容器默认的JSESSIONID -->  
+        <property name="sessionIdCookie" ref="sessionIdCookie"/>
+    </bean>
+	
+	
+	<!-- 保证实现了Shiro内部lifecycle函数的bean执行 -->  
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor" />  
+	
+	
+	
+	<!-- 会话ID生成器 -->
+    <!--<bean id="sessionIdGenerator" class="org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator"/>-->
+
+    <!-- 会话Cookie模板 -->
+    <bean id="sessionIdCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <constructor-arg value="sid"/>
+		<property name="path" value="/" /> 
+        <property name="httpOnly" value="true"/>
+        <property name="maxAge" value="180000"/><!--单位是秒-->
+    </bean>
+
+
+	
+
+
+	
+
+  
+
+	
+	         
+    
+</beans>
