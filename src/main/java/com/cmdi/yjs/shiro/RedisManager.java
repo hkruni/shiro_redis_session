@@ -19,10 +19,9 @@ public class RedisManager {
 	private int expire = 0;
 	private int timeout = 0;
 	private String password = "";
-	private static JedisPool jedisPool = null;
+	private static JedisPool jedisPool = null;//jedisPool是线程安全的，所以不用考虑同步
 	
 	public RedisManager(){
-		System.out.println("RedisManager初始化");
 		init();
 	}
 	/**

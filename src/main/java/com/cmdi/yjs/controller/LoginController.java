@@ -23,15 +23,12 @@ public class LoginController {
 	public String login(@RequestParam("username") String username,@RequestParam("password") String password,
 			RedirectAttributes redirectAttributes,Map<String,Object> map) {
 		
-		System.out.println("login,LoginController");
 		UsernamePasswordToken token = new UsernamePasswordToken(username, MD5Util.md5(password));
 		token.setRememberMe(true);
 		 
-		String msg = "";
 		Subject subject = SecurityUtils.getSubject();
 		try {
 			subject.login(token);
-			System.out.println(subject.isAuthenticated());
 			return "redirect:index.jsp";
 		}catch(UnknownAccountException e) {
 			redirectAttributes.addFlashAttribute("error", "UnknownAccountException");

@@ -25,7 +25,7 @@ public class RedisSession extends AbstractSessionDAO {
     private RedisManager redisManager;  
       
     /** 
-     * shiro-redis的session对象前缀 
+     * shiro-redis的session对象前缀
      */  
     private String keyPrefix = "shiro_redis_session:";  
       
@@ -42,15 +42,13 @@ public class RedisSession extends AbstractSessionDAO {
     private void saveSession(Session session) throws UnknownSessionException{ 
     	
         if(session == null || session.getId() == null){  
-        	System.out.println("session or session id is null");
             logger.error("session or session id is null");  
             return;  
         }  
-        System.out.println("RedisSession set");
         byte[] key = getByteKey(session.getId());  
         byte[] value = SerializationUtils.serialize(session);  
         session.setTimeout(redisManager.getExpire()*1000);        
-        this.redisManager.set(key, value, redisManager.getExpire());  
+        redisManager.set(key, value, redisManager.getExpire());  
     }  
   
     @Override  
