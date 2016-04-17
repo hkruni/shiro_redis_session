@@ -67,7 +67,6 @@ xmlns:p="http://www.springframework.org/schema/p"
 		<property name="basePackage" value="com.cmdi.yjs.dao" />
 	</bean>
 	
-	
 	<!-- 安全认证过滤器 -->  
     <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">  
         <property name="securityManager" ref="securityManager" />  
@@ -79,8 +78,8 @@ xmlns:p="http://www.springframework.org/schema/p"
 				/css/** = anon
 				/js/** =anon
 				/login** = anon
-				/fail** = anon
-                /** = authc
+				/fail** = user
+                /** = user
             </value>  
         </property>  
     </bean>  
@@ -88,8 +87,9 @@ xmlns:p="http://www.springframework.org/schema/p"
     <!-- 定义 Shiro 主要业务对象 -->  
     <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">  
         <property name="realm" ref="systemAuthorizingRealm" />  
-		<property name="sessionMode" value="http"></property>    
+		<property name="sessionMode" value="http"></property><!--使用的httpsession -->   
         <property name="sessionManager" ref="sessionManager"></property>
+		<property name="rememberMeManager" ref="rememberMeManager"/>
     </bean>  
 	
 	<!-- 会话管理器 ，用于Web环境的实现，可以替代ServletContainerSessionManager，自己维护着会话，直接
@@ -124,8 +124,26 @@ xmlns:p="http://www.springframework.org/schema/p"
         <constructor-arg value="sid"/>
 		<property name="path" value="/" /> 
         <property name="httpOnly" value="true"/>
-        <property name="maxAge" value="180000"/><!--单位是秒-->
+        <property name="maxAge" value="-1"/><!--单位是秒-->
     </bean>
+	
+	 <!-- rememberMeCookie魔板 -->
+	<bean id="rememberMeCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <constructor-arg value="rememberMe"/>
+		<property name="path" value="/" /> 
+        <property name="maxAge" value="2592000"/><!-- 30天 -->
+    </bean>
+
+    <!-- rememberMe管理器 -->
+    <bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
+        <!-- rememberMe cookie加密的密钥 建议每个项目都不一样 默认AES算法 密钥长度（128 256 512 位）-->
+        <property name="cipherKey"
+                  value="#{T(org.apache.shiro.codec.Base64).decode('4AvVhmFLUs0KTA3Kprsdag==')}"/>
+        <property name="cookie" ref="rememberMeCookie"/>
+    </bean>
+
+
+
 
 
 </beans>

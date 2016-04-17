@@ -31,7 +31,7 @@ public class SystemAuthorizingRealm extends AuthorizingRealm {
   
     // 获取认证信息 ,执行subject.login(token)时会调用该方法进行登录验证
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authcToken) throws AuthenticationException {  
-        UsernamePasswordToken token = (UsernamePasswordToken) authcToken;  
+    	UsernamePasswordToken token = (UsernamePasswordToken) authcToken;  
         User user = userService.getUser(token.getUsername());
         if(user == null) {
         	throw new UnknownAccountException ();

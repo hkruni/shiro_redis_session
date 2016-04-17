@@ -57,7 +57,6 @@ public class SpringContextHolder implements ApplicationContextAware, DisposableB
      * 实现ApplicationContextAware接口, 注入Context到静态变量中.该方法服务器启动时自动执行
      */
     public void setApplicationContext(ApplicationContext applicationContext) {
-    	System.out.println("执行 setApplicationContext");
         SpringContextHolder.applicationContext = applicationContext;
     }
 
