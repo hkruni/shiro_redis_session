@@ -28,12 +28,7 @@ public class LoginController {
 		 
 		Subject subject = SecurityUtils.getSubject();
 		try {
-			System.out.println(subject.isRemembered());
-			System.out.println(subject.isAuthenticated());
 			subject.login(token);
-			System.out.println(subject.isRemembered());
-			System.out.println(subject.isAuthenticated());
-			
 			return "redirect:index.jsp";
 		}catch(UnknownAccountException e) {
 			redirectAttributes.addFlashAttribute("error", "UnknownAccountException");

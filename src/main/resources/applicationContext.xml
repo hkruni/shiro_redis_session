@@ -90,21 +90,31 @@ xmlns:p="http://www.springframework.org/schema/p"
 		<property name="sessionMode" value="http"></property><!--使用的httpsession -->   
         <property name="sessionManager" ref="sessionManager"></property>
 		<property name="rememberMeManager" ref="rememberMeManager"/>
+		 <!-- 使用redis作为缓存 -->  
+        <property name="cacheManager" ref="redisCacheManager" />  
+    </bean>  
+    
+    <bean id="systemAuthorizingRealm" class="com.cmdi.yjs.shiro.SystemAuthorizingRealm">  
+        <property name="userService" ref="userService" />    
+        <property name="cachingEnabled" value="true" />
+        <property name="authenticationCachingEnabled" value="true" />
+        <property name="authenticationCacheName" value="authenticationCache" />
     </bean>  
 	
 	<!-- 会话管理器 ，用于Web环境的实现，可以替代ServletContainerSessionManager，自己维护着会话，直接
 	 废弃了Servlet容器的会话管理-->
     <bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
-    	<!-- 设置全局会话超时时间，默认30分钟(1800000) --> 
+    	<!-- 设置全局会话超时时间，默认30分钟(1800000)，30分钟就会话无操作就从redis中删除 --> 
         <property name="globalSessionTimeout" value="1800000"/>
 		 <!-- 是否在会话过期后会调用SessionDAO的delete方法删除会话 默认true -->
         <property name="deleteInvalidSessions" value="true"/>
-		 <!-- 定时检查失效的session -->
+		 <!-- 是否定时检查失效的session -->
         <property name="sessionValidationSchedulerEnabled" value="true"/>
-		<!-- 会话验证器调度时间 --> 
-        <property name="sessionValidationInterval" value="1800000"/>
+		<!-- 会话验证器调度时间，每30分钟就对redis中的session进行检查 --> 
+        <property name="sessionValidationInterval" value="180000"/>
 		<!-- session存储的实现 -->
         <property name="sessionDAO" ref="redisSession"/>
+        <!-- 设置为false，浏览器就接受不到JSESSIONID这个cookie-->
         <property name="sessionIdCookieEnabled" value="true"/>
 		 <!-- sessionIdCookie的实现,用于重写覆盖容器默认的JSESSIONID -->  
         <property name="sessionIdCookie" ref="sessionIdCookie"/>
@@ -121,10 +131,12 @@ xmlns:p="http://www.springframework.org/schema/p"
 
     <!-- 会话Cookie模板 -->
     <bean id="sessionIdCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+    	 <!-- 默认为JSESSIONID,这里改为sid -->
         <constructor-arg value="sid"/>
 		<property name="path" value="/" /> 
         <property name="httpOnly" value="true"/>
-        <property name="maxAge" value="-1"/><!--单位是秒-->
+        <!--单位是秒，-1表示浏览器关闭cookie就消失-->
+        <property name="maxAge" value="-1"/>
     </bean>
 	
 	 <!-- rememberMeCookie魔板 -->

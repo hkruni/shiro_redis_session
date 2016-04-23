@@ -10,18 +10,16 @@ import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.cache.CacheManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import com.cmdi.yjs.shiro.RedisCache;
-import com.cmdi.yjs.shiro.RedisManager;
-
+@Service
 public class RedisCacheManager implements CacheManager {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(RedisCacheManager.class);
-
-	// fast lookup by name map
+	private static final Logger logger = LoggerFactory.getLogger(RedisCacheManager.class);
 	private final ConcurrentMap<String, Cache> caches = new ConcurrentHashMap<String, Cache>();
 
+	@Autowired
 	private RedisManager redisManager;
 
 	/**
@@ -53,10 +51,11 @@ public class RedisCacheManager implements CacheManager {
 		
 		Cache c = caches.get(name);
 		
+		
 		if (c == null) {
 
 			// initialize the Redis manager instance
-			redisManager.init();
+			//redisManager.init();
 			
 			// create a new cache instance
 			c = new RedisCache<K, V>(redisManager, keyPrefix);

@@ -14,6 +14,7 @@ import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.util.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class RedisCache<K, V> implements Cache<K, V> {
 	
@@ -27,7 +28,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
 	/**
 	 * The Redis key prefix for the sessions 
 	 */
-	private String keyPrefix = "shiro_redis_session:";
+	private String keyPrefix = "shiro_redis_cache:";
 	
 	/**
 	 * Returns the Redis session keys
@@ -108,7 +109,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
 	public V put(K key, V value) throws CacheException {
 		logger.debug("根据key从存储 key [" + key + "]");
 		 try {
-			 	cache.set(getByteKey(key), SerializeUtils.serialize(value));
+			 	cache.set(getByteKey(key), SerializeUtils.serialize(value),60000);
 	            return value;
 	        } catch (Throwable t) {
 	            throw new CacheException(t);

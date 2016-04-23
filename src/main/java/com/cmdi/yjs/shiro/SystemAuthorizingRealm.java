@@ -17,13 +17,21 @@ import org.springframework.stereotype.Service;
 import com.cmdi.yjs.model.User;
 import com.cmdi.yjs.service.UserService;
 
-@Service  
 public class SystemAuthorizingRealm extends AuthorizingRealm {  
   
-	@Autowired
-    private UserService userService;  
+    private UserService userService; 
+	
+	
   
-    // 获取授权信息  
+    public UserService getUserService() {
+		return userService;
+	}
+
+	public void setUserService(UserService userService) {
+		this.userService = userService;
+	}
+
+	// 获取授权信息  
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection arg0) {  
         // TODO Auto-generated method stub  
         return null;  
